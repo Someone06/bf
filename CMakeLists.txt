@@ -3,4 +3,8 @@ project(bf)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(bf src/main.cpp)
+add_executable(bf
+        src/main.cpp
+        src/TokenType.cpp
+        src/Token.cpp
+)
