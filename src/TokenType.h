@@ -1,8 +1,9 @@
 #ifndef BF_TOKENTYPE_H
 #define BF_TOKENTYPE_H
 
+#include <ostream>
+#include <string_view>
 #include <optional>
-#include <string>
 
 enum class TokenType {
     Inc,

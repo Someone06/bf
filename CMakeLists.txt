@@ -7,4 +7,5 @@ add_executable(bf
         src/main.cpp
         src/TokenType.cpp
         src/Token.cpp
+        src/Lexer.cpp
 )
