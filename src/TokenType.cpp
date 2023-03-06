@@ -17,6 +17,8 @@
             return {"["};
         case TokenType::Right:
             return {"]"};
+        default:
+            throw std::logic_error("Unreachable!");
     }
 }
 
