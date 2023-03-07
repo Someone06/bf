@@ -50,28 +50,41 @@ private:
     Token t;
 };
 
-class Left final : public Node {
+class Repeating : public Node {
+public:
+    Repeating(Token token, std::uint8_t count) : Node{token}, c{count} {}
+
+    [[nodiscard]] std::uint8_t get_count() const noexcept {
+        return c;
+    }
+
+private:
+    std::uint8_t c;
+
+};
+
+class Left final : public Repeating {
 public:
     void accept(Visitor& v) const noexcept override {
        v.visit(*this);
     }
 };
 
-class Right final : public Node {
+class Right final : public Repeating {
 public:
     void accept(Visitor& v) const noexcept override {
        v.visit(*this);
     }
 };
 
-class Inc final : public Node {
+class Inc final : public Repeating {
 public:
     void accept(Visitor& v) const noexcept override {
        v.visit(*this);
     }
 };
 
-class Dec final : public Node {
+class Dec final : public Repeating {
 public:
     void accept(Visitor& v) const noexcept override {
        v.visit(*this);
