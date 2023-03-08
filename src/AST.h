@@ -65,6 +65,7 @@ private:
 
 class Left final : public Repeating {
 public:
+    using Repeating::Repeating;
     void accept(Visitor& v) const noexcept override {
        v.visit(*this);
     }
@@ -72,6 +73,7 @@ public:
 
 class Right final : public Repeating {
 public:
+    using Repeating::Repeating;
     void accept(Visitor& v) const noexcept override {
        v.visit(*this);
     }
@@ -79,6 +81,7 @@ public:
 
 class Inc final : public Repeating {
 public:
+    using Repeating::Repeating;
     void accept(Visitor& v) const noexcept override {
        v.visit(*this);
     }
@@ -86,6 +89,7 @@ public:
 
 class Dec final : public Repeating {
 public:
+    using Repeating::Repeating;
     void accept(Visitor& v) const noexcept override {
        v.visit(*this);
     }
@@ -93,6 +97,7 @@ public:
 
 class In final : public Node {
 public:
+    using Node::Node;
     void accept(Visitor& v) const noexcept override {
        v.visit(*this);
     }
@@ -100,6 +105,7 @@ public:
 
 class Out final : public Node {
 public:
+    using Node::Node;
     void accept(Visitor& v) const noexcept override {
        v.visit(*this);
     }
@@ -107,17 +113,22 @@ public:
 
 class While final : public Node {
 public:
-    While(Token token, std::vector<std::unique_ptr<Node>> body): Node{token}, b{std::move(body)} {}
+    While(Token opening, Token closing, std::vector<std::unique_ptr<Node>> body): Node{opening}, c{closing}, b{std::move(body)} {}
 
     void accept(Visitor& v) const noexcept override {
        v.visit(*this);
     }
 
-    const std::vector<std::unique_ptr<Node>>& body() {
+    [[nodiscard]] const std::vector<std::unique_ptr<Node>>& body() {
         return b;
     }
 
+    [[nodiscard]] Token closing() const noexcept {
+        return c;
+    }
+
 private:
+    const Token c;
     const std::vector<std::unique_ptr<Node>> b;
 };
 

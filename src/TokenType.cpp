@@ -63,6 +63,8 @@
             return {"Left"};
         case TokenType::Right:
             return {"Right"};
+        default:
+            throw std::logic_error("Unreachable!");
     }
 }
 
