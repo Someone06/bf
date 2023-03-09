@@ -19,8 +19,7 @@ namespace FormatStringImplementationDetails {
     std::string format_string_internal(const std::string &format,
                                        Args &&...args) {
         const auto size = std::snprintf(nullptr, 0, format.c_str(),
-                                        std::forward<Args>(args)...) +
-                          1;
+                                        std::forward<Args>(args)...) + 1;
         const auto buffer = std::make_unique<char[]>(size);
 
         std::snprintf(buffer.get(), size, format.c_str(),
