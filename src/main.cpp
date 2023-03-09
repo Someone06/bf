@@ -54,6 +54,20 @@ std::ranges::input_range auto lex(T begin, T end = T{}) {
              | std::views::transform(toToken);
 }
 
+template<TokenType> struct TokenTypeToASTType {};
+#define CONV(from, to) template<> struct TokenTypeToASTType<from> {using type = to;};
+    CONV(TokenType::Add, Inc)
+    CONV(TokenType::Sub, Dec)
+    CONV(TokenType::Inc, Right)
+    CONV(TokenType::Dec, Left)
+    CONV(TokenType::In, In)
+    CONV(TokenType::Out, Out)
+#undef CONV
+
+template <TokenType EnumVal>
+using enum_to_type = decltype(TokenTypeToASTType<EnumVal>{})::type;
+
+
 template<std::ranges::input_range T>
 requires std::same_as<std::ranges::range_value_t<T>, Token>
 std::variant<AST, std::string> parse(T tokens) {
@@ -61,30 +75,60 @@ std::variant<AST, std::string> parse(T tokens) {
    std::vector<Token> leftTokens {};
    std::vector<std::unique_ptr<Node>>* cur {&stack.emplace_back()};
 
+   std::optional<Token> prev = std::nullopt;
+   std::uint_fast8_t counter = 0;
+
+
+   auto dump = [](TokenType kind, std::vector<std::unique_ptr<Node>>* cur, Token t, std::uint16_t counter) {
+         switch (kind) {
+#define CASE(kind) case kind: cur->push_back(std::make_unique<enum_to_type<kind>>(t, counter)); break;
+            CASE(TokenType::Inc)
+            CASE(TokenType::Dec)
+            CASE(TokenType::Add)
+            CASE(TokenType::Sub)
+#undef CASE
+            default:
+                throw std::logic_error("unreachable");
+        }
+   };
+
     for(Token t : tokens) {
+        if(prev && prev->kind() == t.kind()) {
+            ++counter;
+            if(counter == 255) {
+                dump(prev->kind(), cur, t, counter);
+                counter = 0;
+                prev = std::nullopt;
+            }
+
+            continue;
+        }
+
+        if(prev) {
+            dump(prev->kind(), cur, t, counter);
+            counter = 0;
+            prev = std::nullopt;
+        }
+
        switch (t.kind()) {
            case TokenType::Inc:
-               cur->push_back(std::make_unique<Right>(t, 1));
-               break;
            case TokenType::Dec:
-               cur->push_back(std::make_unique<Left>(t, 1));
-               break;
            case TokenType::Add:
-               cur->push_back(std::make_unique<Inc>(t, 1));
-               break;
            case TokenType::Sub:
-               cur->push_back(std::make_unique<Dec>(t, 1));
+               prev = {t};
+               counter = 1;
                break;
-           case TokenType::In:
-               cur->push_back(std::make_unique<In>(t));
-               break;
-           case TokenType::Out:
-               cur->push_back(std::make_unique<Out>(t));
-               break;
+
+#define CASE(kind) case kind: cur->push_back(std::make_unique<enum_to_type<kind>>(t)); break;
+           CASE(TokenType::In)
+           CASE(TokenType::Out)
+#undef CASE
+
            case TokenType::Left:
                cur = &stack.emplace_back();
                leftTokens.push_back(t);
                break;
+
            case TokenType::Right:
                if (leftTokens.empty()) {
                    auto msg = format_string("Error: Unexpected token '%s' at line '%d', column '%d'.", t, t.row(), t.col());
@@ -101,7 +145,13 @@ std::variant<AST, std::string> parse(T tokens) {
                leftTokens.pop_back();
                break;
        }
-   };
+   }
+
+   if(prev) {
+       dump(prev->kind(), cur, *prev, counter);
+       counter = 0;
+       prev = std::nullopt;
+   }
 
    if(!leftTokens.empty()) {
        Token t = leftTokens.back();
