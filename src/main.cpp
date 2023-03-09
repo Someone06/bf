@@ -30,10 +30,7 @@ requires std::same_as<std::iter_value_t<T>, char> && std::move_constructible<T>
 std::ranges::input_range auto lex(T begin, T end = T{}) {
     InputRange r {std::move(begin), std::move(end)};
 
-    int line = 0;
-    int col = 0;
-
-    auto toSymbol = [&line, &col](char c) {
+    auto toSymbol = [line=0, col=0] (char c) mutable {
         if(c == '\n') {
             ++line;
             col = 0;
