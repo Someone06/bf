@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cassert>
 
 #include "AstVisitors.h"
 #include "format_string.h"
