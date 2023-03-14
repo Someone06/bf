@@ -1,7 +1,8 @@
 #ifndef BF_ASTVISITORS_H
 #define BF_ASTVISITORS_H
 
-#include<limits>
+#include <functional>
+#include <limits>
 
 #include "AST.h"
 
@@ -27,15 +28,11 @@ private:
     AST& a;
 };
 
-template<typename T>
-concept Writeable = requires (T x, std::string_view s) { x << s;};
-
-template<Writeable T>
 class ASTPrinter : private ASTWalker {
  public:
-    ASTPrinter(AST& ast, T& out, std::uint64_t increment = 4) : ASTWalker{ast}, o{out}, inc{increment}{}
-
-    void print() { visit_all(); }
+    ASTPrinter(AST& ast, std::ostream& out, std::uint64_t increment = 4)
+         : ASTWalker{ast}, o{out}, inc{increment} {}
+    void print();
 
 private:
     void visit(const Left &node) override;
@@ -52,88 +49,13 @@ private:
     void indent();
     void deIndent();
 
-    void printString(std::string_view str);
+    void printToken(Token t);
     void printNewline();
     void printIndent();
 
     std::uint64_t inc;
     std::uint64_t indentation {0};
-    T& o;
+    std::ostream& o;
 };
-
-// --------------------------- Definitions -----------------------------------
-
-#define FUN \
-    template<Writeable T> \
-    void ASTPrinter<T>::
-
-FUN visitPrimitive(const Node &node) {
-    printIndent();
-    printString(to_symbol(node.token().kind()));
-    printNewline();
-}
-
-FUN visitRepeating(const Repeating &repeating) {
-    for(auto count = repeating.get_count(); count > 0; --count) {
-        visitPrimitive(repeating);
-    }
-}
-
-#define VISIT_REPEATING(type)     \
-    FUN visit(const type &node) { \
-        visitRepeating(node);     \
-    }
-VISIT_REPEATING(Left)
-VISIT_REPEATING(Right)
-VISIT_REPEATING(Inc)
-VISIT_REPEATING(Dec)
-#undef VISIT_REPEATING
-
-
-#define VISIT_PRIMITIVE(type)      \
-    FUN visit(const type &node) { \
-        visitPrimitive(node);     \
-    }
-VISIT_PRIMITIVE(In)
-VISIT_PRIMITIVE(Out)
-#undef VISIT_PRIMITIVE
-
-FUN visit(const While &node) {
-    printIndent();
-    printString(to_symbol(node.token().kind()));
-    printNewline();
-
-    indent();
-    ASTWalker::visit(node);
-    deIndent();
-
-    printIndent();
-    printString(to_symbol(node.closing().kind()));
-    printNewline();
-}
-
-FUN indent() {
-    if(std::numeric_limits<decltype(indentation)>::max() - inc >= indentation)
-        indentation += inc;
-}
-
-FUN deIndent() {
-    if(indentation >= inc)
-        indentation -= inc;
-}
-
-FUN printString(const std::string_view str) {
-    o << str;
-}
-
-FUN printIndent() {
-    printString(std::string(indentation, ' '));
-}
-
-FUN printNewline() {
-    printString("\n");
-}
-
-#undef FUN
 
 #endif
