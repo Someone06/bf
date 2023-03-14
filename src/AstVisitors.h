@@ -99,11 +99,17 @@ VISIT_PRIMITIVE(Out)
 #undef VISIT_PRIMITIVE
 
 FUN visit(const While &node) {
+    printIndent();
     printString(to_symbol(node.token().kind()));
+    printNewline();
+
     indent();
     ASTWalker::visit(node);
     deIndent();
+
+    printIndent();
     printString(to_symbol(node.closing().kind()));
+    printNewline();
 }
 
 FUN indent() {

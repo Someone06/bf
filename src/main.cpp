@@ -13,24 +13,21 @@
 #include "TokenType.h"
 #include "format_string.h"
 
-template<std::input_iterator T>
-requires std::move_constructible<T>
+template<typename T>
+requires std::move_constructible<T> && std::constructible_from<std::istream_iterator<char>, T&>
 class InputRange final {
 public:
-   explicit InputRange(T begin, T end) : b{std::move(begin)}, e{std::move(end)} {}
+   explicit InputRange(T source) : src{std::move(source)} {}
 
-   T begin() { return b; }
-   T end() { return e; }
+   std::input_iterator auto begin() { return std::istream_iterator<char>{src}; }
+   std::input_iterator auto end() { return std::istream_iterator<char>{}; }
 
 private:
-   T b;
-   T e;
+   T src;
 };
 
-template<std::input_iterator T>
-requires std::same_as<std::iter_value_t<T>, char> && std::move_constructible<T>
-std::ranges::input_range auto lex(T begin, T end = T{}) {
-    InputRange r {std::move(begin), std::move(end)};
+template<typename T>
+std::ranges::input_range auto lex(InputRange<T>& r) {
 
     auto toSymbol = [line=0, col=0] (char c) mutable {
         if(c == '\n') {
@@ -81,7 +78,8 @@ std::variant<AST, std::string> parse(T tokens) {
    std::uint_fast8_t counter = 0;
 
 
-   auto dump = [](TokenType kind, std::vector<std::unique_ptr<Node>>* cur, Token t, std::uint16_t counter) {
+   auto dump = [](std::vector<std::unique_ptr<Node>>* cur, Token t, std::uint16_t counter) {
+         auto kind = t.kind();
          switch (kind) {
 #define CASE(kind) case kind: cur->push_back(std::make_unique<enum_to_type<kind>>(t, counter)); break;
             CASE(TokenType::Inc)
@@ -98,7 +96,7 @@ std::variant<AST, std::string> parse(T tokens) {
         if(prev && prev->kind() == t.kind()) {
             ++counter;
             if(counter == 255) {
-                dump(prev->kind(), cur, t, counter);
+                dump(cur, *prev, counter);
                 counter = 0;
                 prev = std::nullopt;
             }
@@ -107,7 +105,7 @@ std::variant<AST, std::string> parse(T tokens) {
         }
 
         if(prev) {
-            dump(prev->kind(), cur, t, counter);
+            dump(cur, *prev, counter);
             counter = 0;
             prev = std::nullopt;
         }
@@ -150,7 +148,7 @@ std::variant<AST, std::string> parse(T tokens) {
    }
 
    if(prev) {
-       dump(prev->kind(), cur, *prev, counter);
+       dump(cur, *prev, counter);
        counter = 0;
        prev = std::nullopt;
    }
@@ -162,13 +160,12 @@ std::variant<AST, std::string> parse(T tokens) {
    }
 
    assert(stack.size() == 1);
-   return std::variant<AST, std::string> {AST {std::move(stack.at(1))}};
+   return std::variant<AST, std::string> {AST {std::move(stack.at(0))}};
 }
 
-template<std::input_iterator T>
-requires std::same_as<std::iter_value_t<T>, char>
-        std::variant<AST, std::string> lexAndParse(T begin, T end) {
-    std::ranges::input_range auto lexed = lex(begin, end);
+template<typename T>
+std::variant<AST, std::string> lexAndParse(InputRange<T>& range) {
+    std::ranges::input_range auto lexed = lex(range);
     return parse(lexed);
 }
 
@@ -179,14 +176,14 @@ int main(int argc, char* argv[]) {
     }
 
     std::ifstream in{argv[1]};
-    std::istreambuf_iterator<char> b {in};
-    std::istreambuf_iterator<char> e {};
-    auto parsed = lexAndParse(b, e);
+    InputRange range {std::move(in)};
+    auto parsed = lexAndParse(range);
     if(std::holds_alternative<std::string>(parsed)) {
         std::cerr << std::get<std::string>(parsed);
     } else {
         auto& ast = std::get<AST>(parsed);
         ASTPrinter printer(ast, std::cout);
+        printer.print();
     }
 }
 
