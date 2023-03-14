@@ -53,14 +53,14 @@ private:
 
 class Repeating : public Node {
 public:
-    Repeating(Token token, std::uint8_t count) : Node{token}, c{count} {}
+    Repeating(Token token, char count) : Node{token}, c{count} {}
 
-    [[nodiscard]] std::uint8_t get_count() const noexcept {
+    [[nodiscard]] char get_count() const noexcept {
         return c;
     }
 
 private:
-    std::uint8_t c;
+    char c;
 
 };
 

@@ -75,10 +75,10 @@ std::variant<AST, std::string> parse(T tokens) {
    std::vector<std::unique_ptr<Node>>* cur {&stack.emplace_back()};
 
    std::optional<Token> prev = std::nullopt;
-   std::uint_fast8_t counter = 0;
+   char counter = 0;
 
 
-   auto dump = [](std::vector<std::unique_ptr<Node>>* cur, Token t, std::uint16_t counter) {
+   auto dump = [](std::vector<std::unique_ptr<Node>>* cur, Token t, char counter) {
          auto kind = t.kind();
          switch (kind) {
 #define CASE(kind) case kind: cur->push_back(std::make_unique<enum_to_type<kind>>(t, counter)); break;
@@ -95,7 +95,7 @@ std::variant<AST, std::string> parse(T tokens) {
     for(Token t : tokens) {
         if(prev && prev->kind() == t.kind()) {
             ++counter;
-            if(counter == 255) {
+            if(counter == std::numeric_limits<char>::max()) {
                 dump(cur, *prev, counter);
                 counter = 0;
                 prev = std::nullopt;

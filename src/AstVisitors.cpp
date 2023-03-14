@@ -108,7 +108,7 @@ void ASTExecutor::run() {
 }
 
 void ASTExecutor::visit(const Left &node) {
-  const auto count = node.get_count();
+  char count = node.get_count();
   if(ptr >= count)
        ptr -= count;
   else
@@ -116,23 +116,22 @@ void ASTExecutor::visit(const Left &node) {
 
 }
 void ASTExecutor::visit(const Right &node) {
-    const auto count = node.get_count();
+    char count = node.get_count();
     if(size - count >= ptr)
        ptr += count;
     else
        error(node);
 }
 void ASTExecutor::visit(const Inc &node) {
-    const auto count = node.get_count();
+    char count = node.get_count();
     mem[ptr] += count;
 }
 void ASTExecutor::visit(const Dec &node) {
-    const auto count = node.get_count();
+    char count = node.get_count();
     mem[ptr] -= count;
 }
 void ASTExecutor::visit(const In &node) {
-    auto val = i.get();
-    assert(val > 0 && val <= 255);
+    char val = i.get();
     mem[ptr] = val;
 }
 void ASTExecutor::visit(const Out &node) {

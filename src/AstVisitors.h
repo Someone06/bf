@@ -88,13 +88,12 @@ private:
     void visit(const While &node) override;
 
     void reset();
-    uint8_t readInput();
 
     std::istream& i;
     std::ostream& o;
 
     const size_t size;
-    std::vector<uint8_t> mem;
+    std::vector<char> mem;
 
     bool dirty {false};
     size_t ptr {0};
