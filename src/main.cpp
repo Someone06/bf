@@ -3,10 +3,12 @@
 #include <fstream>
 #include <iostream>
 #include <ranges>
+#include <sstream>
 #include <variant>
 #include <vector>
 
 #include "AST.h"
+#include "AstVisitors.h"
 #include "Token.h"
 #include "TokenType.h"
 #include "format_string.h"
@@ -182,6 +184,9 @@ int main(int argc, char* argv[]) {
     auto parsed = lexAndParse(b, e);
     if(std::holds_alternative<std::string>(parsed)) {
         std::cerr << std::get<std::string>(parsed);
+    } else {
+        auto& ast = std::get<AST>(parsed);
+        ASTPrinter printer(ast, std::cout);
     }
 }
 

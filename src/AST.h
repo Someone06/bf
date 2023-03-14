@@ -15,6 +15,7 @@ class Out;
 class While;
 
 struct Visitor {
+    Visitor() = default;
     Visitor(const Visitor&) = delete;
     Visitor& operator=(const Visitor&) = delete;
     Visitor(Visitor&&) = delete;
@@ -119,7 +120,7 @@ public:
        v.visit(*this);
     }
 
-    [[nodiscard]] const std::vector<std::unique_ptr<Node>>& body() {
+    [[nodiscard]] const std::vector<std::unique_ptr<Node>>& body() const {
         return b;
     }
 
