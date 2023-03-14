@@ -1,5 +1,9 @@
-#include "AstVisitors.h"
 #include <algorithm>
+#include <cassert>
+
+#include "AstVisitors.h"
+#include "format_string.h"
+
 // ------------------------- ASTWalker ---------------------------------------
 void ASTWalker::visit(const Left &left) {}
 void ASTWalker::visit(const Right &right) {}
@@ -18,7 +22,7 @@ void ASTWalker::visit_body(const std::vector<std::unique_ptr<Node>> &nodes) {
     std::ranges::for_each(nodes | std::views::transform(deref), visit);
 }
 
-void ASTWalker::visit_all() {
+void ASTWalker::visit() {
     visit_body(a.nodes());
 }
 
@@ -27,7 +31,7 @@ const AST &ASTWalker::ast() const noexcept {
 }
 
 // ------------------------- ASTPrinter ---------------------------------------
-void ASTPrinter::print() { visit_all(); }
+void ASTPrinter::print() { ASTWalker::visit(); }
 
 void ASTPrinter::visitPrimitive(const Node &node) { printToken(node.token());
 }
@@ -87,4 +91,62 @@ void ASTPrinter::printToken(Token t) {
     printIndent();
     o << to_symbol(t.kind());
     printNewline();
+}
+// ------------------------- ASTExecutor ---------------------------------------
+void error(const Node &node) {
+    Token t = node.token();
+    auto msg = format_string(
+            "Error at: '%s', row &d, column '%d': Memory out of range",
+            to_symbol(t.kind()), t.row(), t.col());
+    throw OutOfRangeMemoryAccess(msg, t);
+}
+
+void ASTExecutor::run() {
+    reset();
+    dirty = true;
+    ASTWalker::visit();
+}
+
+void ASTExecutor::visit(const Left &node) {
+  const auto count = node.get_count();
+  if(ptr >= count)
+       ptr -= count;
+  else
+       error(node);
+
+}
+void ASTExecutor::visit(const Right &node) {
+    const auto count = node.get_count();
+    if(size - count >= ptr)
+       ptr += count;
+    else
+       error(node);
+}
+void ASTExecutor::visit(const Inc &node) {
+    const auto count = node.get_count();
+    mem[ptr] += count;
+}
+void ASTExecutor::visit(const Dec &node) {
+    const auto count = node.get_count();
+    mem[ptr] -= count;
+}
+void ASTExecutor::visit(const In &node) {
+    auto val = i.get();
+    assert(val > 0 && val <= 255);
+    mem[ptr] = val;
+}
+void ASTExecutor::visit(const Out &node) {
+   o.put(mem[ptr]);
+}
+
+void ASTExecutor::visit(const While &node) {
+  while(mem[ptr]) {
+       ASTWalker::visit(node);
+  }
+}
+
+void ASTExecutor::reset() {
+    if(dirty) {
+        std::ranges::fill(mem, 0);
+    }
 }

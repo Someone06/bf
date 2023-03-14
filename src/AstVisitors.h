@@ -3,13 +3,14 @@
 
 #include <functional>
 #include <limits>
+#include<istream>
 
 #include "AST.h"
 
 class ASTWalker : protected Visitor {
 public:
     explicit ASTWalker(AST& ast) : Visitor{}, a{ast}{}
-    void visit_all();
+    void visit();
 
 protected:
     void visit(const Left &left) override;
@@ -56,6 +57,47 @@ private:
     std::uint64_t inc;
     std::uint64_t indentation {0};
     std::ostream& o;
+};
+
+class OutOfRangeMemoryAccess final : public std::runtime_error {
+public:
+   OutOfRangeMemoryAccess(const std::string& msg, Token token)
+        : std::runtime_error{msg}, t{token} {}
+
+    [[nodiscard]] Token token() {
+        return t;
+    }
+private:
+    Token t;
+};
+
+class ASTExecutor : private ASTWalker {
+public:
+    ASTExecutor(AST& ast, std::istream& in, std::ostream& out, size_t memorySize = 30'000)
+            : ASTWalker{ast}, i{in}, o{out}, size{memorySize}, mem(size) {}
+
+    void run();
+
+private:
+    void visit(const Left &node) override;
+    void visit(const Right &node) override;
+    void visit(const Inc &node) override;
+    void visit(const Dec &node) override;
+    void visit(const In &node) override;
+    void visit(const Out &node) override;
+    void visit(const While &node) override;
+
+    void reset();
+    uint8_t readInput();
+
+    std::istream& i;
+    std::ostream& o;
+
+    const size_t size;
+    std::vector<uint8_t> mem;
+
+    bool dirty {false};
+    size_t ptr {0};
 };
 
 #endif

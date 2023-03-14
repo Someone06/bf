@@ -181,9 +181,11 @@ int main(int argc, char* argv[]) {
     if(std::holds_alternative<std::string>(parsed)) {
         std::cerr << std::get<std::string>(parsed);
     } else {
-        auto& ast = std::get<AST>(parsed);
-        ASTPrinter printer(ast, std::cout);
+        auto& ast {std::get<AST>(parsed)};
+        ASTPrinter printer{ast, std::cout};
         printer.print();
+        ASTExecutor exec {ast, std::cin, std::cout};
+        exec.run();
     }
 }
 
