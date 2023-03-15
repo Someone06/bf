@@ -3,6 +3,7 @@
 
 #include "Token.h"
 #include <memory>
+#include <ostream>
 #include <ranges>
 #include <vector>
 
@@ -47,6 +48,14 @@ public:
 
     virtual void accept(Visitor& v) const noexcept = 0;
 
+    virtual std::ostream& print(std::ostream& os) const {
+         return (os << "t: " << t);
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const Node &node) {
+        return node.print(os);
+    }
+
 private:
     Token t;
 };
@@ -59,6 +68,14 @@ public:
         return c;
     }
 
+    std::ostream& print(std::ostream& os) const override {
+        return (Node::print(os) << ", c: " << (int) c);
+    }
+
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const Repeating &repeating) {
+        return repeating.print(os);
+    }
 private:
     char c;
 

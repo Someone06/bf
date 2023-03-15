@@ -8,5 +8,5 @@ add_executable(bf
         src/main.cpp
         src/TokenType.cpp
         src/Token.cpp
-        src/AstVisitors.cpp)
+        src/AstVisitors.cpp src/NullOstream.cpp)
 

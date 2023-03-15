@@ -2,10 +2,13 @@
 #define BF_ASTVISITORS_H
 
 #include <functional>
+#include <iostream>
+#include <istream>
 #include <limits>
-#include<istream>
 
 #include "AST.h"
+#include "NullOstream.h"
+#include "debug.h"
 
 class ASTWalker : protected Visitor {
 public:
@@ -73,8 +76,8 @@ private:
 
 class ASTExecutor : private ASTWalker {
 public:
-    ASTExecutor(AST& ast, std::istream& in, std::ostream& out, size_t memorySize = 30'000)
-            : ASTWalker{ast}, i{in}, o{out}, size{memorySize}, mem(size) {}
+    ASTExecutor(AST& ast, std::istream& in, std::ostream& out, std::ostream& err = Debug::if_debug<std::ostream&>(std::cerr, cnull), size_t memorySize = 30'000)
+            : ASTWalker{ast}, i{in}, o{out}, e{err}, size{memorySize}, mem(size) {}
 
     void run();
 
@@ -91,6 +94,7 @@ private:
 
     std::istream& i;
     std::ostream& o;
+    std::ostream& e;
 
     const size_t size;
     std::vector<char> mem;

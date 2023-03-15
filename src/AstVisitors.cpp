@@ -92,6 +92,13 @@ void ASTPrinter::printToken(Token t) {
     printNewline();
 }
 // ------------------------- ASTExecutor ---------------------------------------
+inline static void trace(const Node& node, std::ostream& os) {
+    if constexpr (Debug::debug)
+       os << node << '\n';
+}
+
+#define TRACE(node) do { trace(node, e); } while(false)
+
 void error(const Node &node) {
     Token t = node.token();
     auto msg = format_string(
@@ -107,6 +114,7 @@ void ASTExecutor::run() {
 }
 
 void ASTExecutor::visit(const Left &node) {
+  TRACE(node);
   char count = node.get_count();
   if(ptr >= count)
        ptr -= count;
@@ -115,6 +123,7 @@ void ASTExecutor::visit(const Left &node) {
 
 }
 void ASTExecutor::visit(const Right &node) {
+    TRACE(node);
     char count = node.get_count();
     if(size - count >= ptr)
        ptr += count;
@@ -122,25 +131,30 @@ void ASTExecutor::visit(const Right &node) {
        error(node);
 }
 void ASTExecutor::visit(const Inc &node) {
+    TRACE(node);
     auto count = node.get_count();
     mem[ptr] = static_cast<char>(mem[ptr] + count); // Narrowing conversion
 }
 void ASTExecutor::visit(const Dec &node) {
+    TRACE(node);
     auto count = node.get_count();
     mem[ptr] = static_cast<char>(mem[ptr] - count); // Narrowing conversion
 }
 void ASTExecutor::visit(const In &node) {
+    TRACE(node);
     auto val = static_cast<char>(i.get()); // Narrowing conversion
     mem[ptr] = val;
 }
 void ASTExecutor::visit(const Out &node) {
-   o.put(mem[ptr]);
+    TRACE(node);
+    o.put(mem[ptr]);
 }
 
 void ASTExecutor::visit(const While &node) {
-  while(mem[ptr]) {
-       ASTWalker::visit(node);
-  }
+    TRACE(node);
+    while(mem[ptr]) {
+        ASTWalker::visit(node);
+    }
 }
 
 void ASTExecutor::reset() {
@@ -148,3 +162,5 @@ void ASTExecutor::reset() {
         std::ranges::fill(mem, 0);
     }
 }
+
+#undef TRACE
