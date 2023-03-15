@@ -25,7 +25,7 @@ void ASTWalker::visit() {
     visit_body(a.nodes());
 }
 
-const AST &ASTWalker::ast() const noexcept {
+[[maybe_unused]] const AST &ASTWalker::ast() const noexcept {
     return a;
 }
 
@@ -122,15 +122,15 @@ void ASTExecutor::visit(const Right &node) {
        error(node);
 }
 void ASTExecutor::visit(const Inc &node) {
-    char count = node.get_count();
-    mem[ptr] += count;
+    auto count = node.get_count();
+    mem[ptr] = static_cast<char>(mem[ptr] + count); // Narrowing conversion
 }
 void ASTExecutor::visit(const Dec &node) {
-    char count = node.get_count();
-    mem[ptr] -= count;
+    auto count = node.get_count();
+    mem[ptr] = static_cast<char>(mem[ptr] - count); // Narrowing conversion
 }
 void ASTExecutor::visit(const In &node) {
-    char val = i.get();
+    auto val = static_cast<char>(i.get()); // Narrowing conversion
     mem[ptr] = val;
 }
 void ASTExecutor::visit(const Out &node) {

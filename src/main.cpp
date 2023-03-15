@@ -69,7 +69,8 @@ using enum_to_type = decltype(TokenTypeToASTType<EnumVal>{})::type;
 
 template<std::ranges::input_range T>
 requires std::same_as<std::ranges::range_value_t<T>, Token>
-std::variant<AST, std::string> parse(T tokens) {
+std::variant<AST, std::string> parse([[maybe_unused]] T tokens) {
+   // The [[maybe_unused]] is there to silence a false warning.
    std::vector<std::vector<std::unique_ptr<Node>>> stack {};
    std::vector<Token> leftTokens {};
    std::vector<std::unique_ptr<Node>>* cur {&stack.emplace_back()};
@@ -81,7 +82,7 @@ std::variant<AST, std::string> parse(T tokens) {
    auto dump = [](std::vector<std::unique_ptr<Node>>* cur, Token t, char counter) {
          auto kind = t.kind();
          switch (kind) {
-#define CASE(kind) case kind: cur->push_back(std::make_unique<enum_to_type<kind>>(t, counter)); break;
+#define CASE(kind) case (kind): cur->push_back(std::make_unique<enum_to_type<(kind)>>(t, counter)); break;
             CASE(TokenType::Inc)
             CASE(TokenType::Dec)
             CASE(TokenType::Add)
@@ -119,7 +120,7 @@ std::variant<AST, std::string> parse(T tokens) {
                counter = 1;
                break;
 
-#define CASE(kind) case kind: cur->push_back(std::make_unique<enum_to_type<kind>>(t)); break;
+#define CASE(kind) case (kind): cur->push_back(std::make_unique<enum_to_type<(kind)>>(t)); break;
            CASE(TokenType::In)
            CASE(TokenType::Out)
 #undef CASE

@@ -21,7 +21,7 @@ protected:
     void visit(const Out &out) override;
     void visit(const While &aWhile) override;
 
-    [[nodiscard]] const AST& ast() const noexcept;
+    [[maybe_unused]] [[nodiscard]] const AST& ast() const noexcept;
 
 private:
     void visit_body(const std::vector<std::unique_ptr<Node>>& nodes);
@@ -64,7 +64,7 @@ public:
    OutOfRangeMemoryAccess(const std::string& msg, Token token)
         : std::runtime_error{msg}, t{token} {}
 
-    [[nodiscard]] Token token() {
+     [[maybe_unused]] [[nodiscard]] Token token() {
         return t;
     }
 private:
