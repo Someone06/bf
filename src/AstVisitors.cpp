@@ -185,6 +185,7 @@ void NextNodeResolver::visit(const Dec &dec) { link(&dec); }
 void NextNodeResolver::visit(const In &in) { link(&in); };
 void NextNodeResolver::visit(const Out &out) { link(&out);  }
 void NextNodeResolver::visit(const While &aWhile) {
+    link(&aWhile);
     ASTWalker::visit(aWhile);
     prev.push_back(&aWhile);
 }

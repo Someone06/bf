@@ -27,7 +27,7 @@ public:
 private:
     llvm::Function& createMainFunction();
     llvm::BasicBlock& createInitialBasicBlock(llvm::Function& mainFun);
-    llvm::BasicBlock& createNextBlock(const While &aWhile);
+    std::pair<llvm::BasicBlock*, bool> createNextBlock(const While &aWhile);
 
     llvm::Value &createMem();
     llvm::Value &createMemPtr();
@@ -57,7 +57,6 @@ private:
     llvm::Value* ptr {nullptr};
 
     llvm::Function * mainFn {nullptr};
-    llvm::BasicBlock * bb {nullptr};
 
     std::unordered_map<const While*, const Node*> nextInstruction;
     std::unordered_map<const Node*, llvm::BasicBlock*> blockForNode {};

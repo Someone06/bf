@@ -1,3 +1,5 @@
+#include<cinttypes>
+
 #include <llvm/IR/AssemblyAnnotationWriter.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/raw_os_ostream.h>
@@ -6,19 +8,21 @@
 
 llvm::Module& LLVM::generate_ir() {
     mainFn = &createMainFunction();
-    bb = &createInitialBasicBlock(*mainFn);
+    createInitialBasicBlock(*mainFn);
     mem = &createMem();
     ptr = &createMemPtr();
 
     ASTWalker::visit();
+    bd.CreateRetVoid();
 
-    if(!llvm::verifyFunction(*mainFn))
+    if(llvm::verifyFunction(*mainFn))
         throw std::runtime_error("Failed to verify main function");
 
     llvm::AssemblyAnnotationWriter writer {};
     llvm::raw_os_ostream output{o};
     mod.print(output, &writer);
-    llvm::verifyModule(mod);
+    if(llvm::verifyModule(mod))
+        throw std::runtime_error("Failed to verify module");
     return mod;
 }
 
@@ -65,10 +69,9 @@ void LLVM::visit(const Out &out) {
 }
 
 void LLVM::visit(const While &aWhile) {
-    auto head {llvm::BasicBlock::Create(ctxt)};
-    auto body {llvm::BasicBlock::Create(ctxt)};
-    auto next = &createNextBlock(aWhile);
-
+    auto head {llvm::BasicBlock::Create(ctxt, "while_head", mainFn)};
+    auto body {llvm::BasicBlock::Create(ctxt, "while_body")};
+    auto [next, newlyCreated] = createNextBlock(aWhile);
     bd.CreateBr(head);
 
     bd.SetInsertPoint(head);
@@ -76,23 +79,25 @@ void LLVM::visit(const While &aWhile) {
     auto cond {bd.CreateICmpNE(value, bd.getInt8(0), "whileCondition")};
     bd.CreateCondBr(cond, body, next);
 
+    mainFn->getBasicBlockList().push_back(body);
     bd.SetInsertPoint(body);
-    aWhile.accept(*this);
+    ASTWalker::visit(aWhile);
     bd.CreateBr(head);
 
-    bb = next;
+    if(newlyCreated)
+        mainFn->getBasicBlockList().push_back(next);
     bd.SetInsertPoint(next);
 }
 
-llvm::BasicBlock& LLVM::createNextBlock(const While &aWhile) {
+std::pair<llvm::BasicBlock*, bool> LLVM::createNextBlock(const While &aWhile) {
     auto nextNode {nextInstruction.at(&aWhile)};
     auto nextBlock {blockForNode.find(nextNode)};
     if(nextBlock != blockForNode.end()) {
-       return *std::get<1>(*nextBlock);
+       return std::make_pair(std::get<1>(*nextBlock), false);
     } else {
-        auto next {llvm::BasicBlock::Create(ctxt)};
+        auto next {llvm::BasicBlock::Create(ctxt, "block")};
         blockForNode.insert(std::make_pair(nextNode, next));
-        return *next;
+        return std::make_pair(next, true);
     }
 }
 
