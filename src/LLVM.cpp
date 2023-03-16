@@ -4,7 +4,7 @@
 
 #include "LLVM.h"
 
-llvm::Module& LLVM::generate_ir(const std::string& program_name) {
+llvm::Module& LLVM::generate_ir() {
     mainFn = &createMainFunction();
     bb = &createInitialBasicBlock(*mainFn);
     mem = &createMem();

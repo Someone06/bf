@@ -9,6 +9,7 @@
 
 #include "AST.h"
 #include "AstVisitors.h"
+#include "LLVM.h"
 #include "Token.h"
 #include "TokenType.h"
 #include "format_string.h"
@@ -187,6 +188,13 @@ int main(int argc, char* argv[]) {
         printer.print();
         ASTExecutor exec {ast, std::cin, std::cout};
         exec.run();
+
+        NextNodeResolver resolver{ast};
+        auto resolved {resolver.resolve()};
+
+        std::ofstream out {"out"};
+        LLVM codeGen {LLVM{ast, resolved, out}};
+        codeGen.generate_ir();
     }
 }
 

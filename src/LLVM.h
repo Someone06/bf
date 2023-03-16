@@ -13,6 +13,7 @@
 #include "AstVisitors.h"
 
 class LLVM final : private ASTWalker {
+public:
     LLVM(AST& ast, std::unordered_map<const While*, const Node*> next, std::ostream &out)
         : ASTWalker{ast},
           nextInstruction {std::move(next)},
@@ -21,8 +22,9 @@ class LLVM final : private ASTWalker {
           bd{llvm::IRBuilder(ctxt, llvm::ConstantFolder())},
           o{out} {}
 
-    llvm::Module& generate_ir(const std::string& program_name);
+    llvm::Module& generate_ir();
 
+private:
     llvm::Function& createMainFunction();
     llvm::BasicBlock& createInitialBasicBlock(llvm::Function& mainFun);
     llvm::BasicBlock& createNextBlock(const While &aWhile);
@@ -45,7 +47,6 @@ class LLVM final : private ASTWalker {
     void visit(const Out &out) override;
     void visit(const While &aWhile) override;
 
-private:
     uint64_t memSz {30'000};
 
     llvm::LLVMContext ctxt;

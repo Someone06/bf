@@ -5,6 +5,7 @@
 #include <iostream>
 #include <istream>
 #include <limits>
+#include <utility>
 
 #include "AST.h"
 #include "NullOstream.h"
@@ -101,6 +102,27 @@ private:
 
     bool dirty {false};
     size_t ptr {0};
+};
+
+class NextNodeResolver final : private ASTWalker {
+public:
+    using ASTWalker::ASTWalker;
+
+    std::unordered_map<const While*, const Node*> resolve();
+
+private:
+    void link(const Node* node);
+
+    void visit(const Left &left) override;
+    void visit(const Right &right) override;
+    void visit(const Inc &inc) override;
+    void visit(const Dec &dec) override;
+    void visit(const In &in) override;
+    void visit(const Out &out) override;
+    void visit(const While &aWhile) override;
+
+    std::unordered_map<const While*, const Node*> map {};
+    std::vector<const While*> prev {};
 };
 
 #endif

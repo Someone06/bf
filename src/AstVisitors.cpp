@@ -164,3 +164,27 @@ void ASTExecutor::reset() {
 }
 
 #undef TRACE
+
+
+// ------------------------- NextNodeResolver ---------------------------------
+std::unordered_map<const While*, const Node*> NextNodeResolver::resolve() {
+    ASTWalker::visit();
+    link(nullptr);
+    return std::exchange(map, std::unordered_map<const While*, const Node*>{});
+}
+
+void NextNodeResolver::link(const Node* node) {
+    auto insert = [&](auto w){map.insert(std::make_pair(w, node));};
+    std::ranges::for_each(prev, insert);
+    prev.clear();
+}
+void NextNodeResolver::visit(const Left &left) { link(&left);  }
+void NextNodeResolver::visit(const Right &right) { link(&right); }
+void NextNodeResolver::visit(const Inc &inc) { link(&inc);}
+void NextNodeResolver::visit(const Dec &dec) { link(&dec); }
+void NextNodeResolver::visit(const In &in) { link(&in); };
+void NextNodeResolver::visit(const Out &out) { link(&out);  }
+void NextNodeResolver::visit(const While &aWhile) {
+    ASTWalker::visit(aWhile);
+    prev.push_back(&aWhile);
+}
