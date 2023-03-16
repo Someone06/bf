@@ -192,7 +192,7 @@ int main(int argc, char* argv[]) {
         NextNodeResolver resolver{ast};
         auto resolved {resolver.resolve()};
 
-        std::ofstream out {"out"};
+        std::ofstream out {"/tmp/bf/build/out.bc"};
         LLVM codeGen {LLVM{ast, resolved, out}};
         codeGen.generate_ir();
     }

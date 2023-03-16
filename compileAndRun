@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -xe
+
+BUILD_DIR='build'
+TMP_DIR='/tmp/bf/build'
+LIB='lib/libBf.c'
+
+BF_SOURCE_FILE=$1
+[[ -n "$BF_SOURCE_FILE" ]]
+
+rm -rf "$TMP_DIR"
+mkdir -p "$TMP_DIR"
+make -C build bf
+$BUILD_DIR/bf "$BF_SOURCE_FILE"
+clang -c -o "$TMP_DIR/libBf.o" "$LIB"
+llc "--filetype=obj" "$TMP_DIR/out.bc"
+clang "$TMP_DIR/libBf.o" "$TMP_DIR/out.o" -o "$TMP_DIR/out.out"
+$TMP_DIR/out.out
