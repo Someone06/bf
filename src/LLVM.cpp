@@ -67,27 +67,33 @@ void LLVM::visit(const Out &out) {
 void LLVM::visit(const While &aWhile) {
     auto head {llvm::BasicBlock::Create(ctxt)};
     auto body {llvm::BasicBlock::Create(ctxt)};
+    auto next = &createNextBlock(aWhile);
 
-    // TODO: Adjust
-    auto next {llvm::BasicBlock::Create(ctxt)};
-
-    // Jump from current basic block to header.
     bd.CreateBr(head);
 
-    // Generate header.
     bd.SetInsertPoint(head);
     auto value {&read()};
     auto cond {bd.CreateICmpNE(value, bd.getInt8(0), "whileCondition")};
     bd.CreateCondBr(cond, body, next);
 
-    // Generate body.
     bd.SetInsertPoint(body);
     aWhile.accept(*this);
     bd.CreateBr(head);
 
-    // Setup for next block.
     bb = next;
     bd.SetInsertPoint(next);
+}
+
+llvm::BasicBlock& LLVM::createNextBlock(const While &aWhile) {
+    auto nextNode {nextInstruction.at(&aWhile)};
+    auto nextBlock {blockForNode.find(nextNode)};
+    if(nextBlock != blockForNode.end()) {
+       return *std::get<1>(*nextBlock);
+    } else {
+        auto next {llvm::BasicBlock::Create(ctxt)};
+        blockForNode.insert(std::make_pair(nextNode, next));
+        return *next;
+    }
 }
 
 llvm::Value& LLVM::createMem() {
@@ -115,7 +121,7 @@ llvm::Value &LLVM::read() {
 }
 void LLVM::write(llvm::Value& val) {
     auto& gep {createGEP()};
-    bd.CreateStore(&val, gep, "mem_store");
+    bd.CreateStore(&val, &gep, "mem_store");
 }
 
 void LLVM::inc(uint64_t amount) {
