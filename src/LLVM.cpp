@@ -15,13 +15,13 @@ llvm::Module& LLVM::generate_ir() {
     ASTWalker::visit();
     bd.CreateRetVoid();
 
-    if(llvm::verifyFunction(*mainFn))
+    if(llvm::verifyFunction(*mainFn, &llvm::errs()))
         throw std::runtime_error("Failed to verify main function");
 
     llvm::AssemblyAnnotationWriter writer {};
     llvm::raw_os_ostream output{o};
     mod.print(output, &writer);
-    if(llvm::verifyModule(mod))
+    if(llvm::verifyModule(mod, &llvm::errs()))
         throw std::runtime_error("Failed to verify module");
     return mod;
 }
@@ -61,11 +61,18 @@ void LLVM::visit(const Dec &dec) {
 }
 
 void LLVM::visit(const In &in) {
-    throw std::logic_error("unimplemented");
+     auto type {llvm::FunctionType::get(bd.getInt8Ty(), false)};
+     auto function { mod.getOrInsertFunction("bfIn", type)};
+     auto val {bd.CreateCall(function, {}, "bfInCall")};
+     write(*val);
 }
 
 void LLVM::visit(const Out &out) {
-    throw std::logic_error("unimplemented");
+    auto val {&read()};
+    auto type {llvm::FunctionType::get(
+            bd.getVoidTy(), {bd.getInt8Ty()}, false)};
+    auto function {mod.getOrInsertFunction("bfOut", type)};
+    bd.CreateCall(function, {val});
 }
 
 void LLVM::visit(const While &aWhile) {
