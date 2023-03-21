@@ -1,15 +1,15 @@
 #ifndef BF_ASTVISITORS_H
 #define BF_ASTVISITORS_H
 
-#include <functional>
 #include <iostream>
-#include <istream>
-#include <limits>
-#include <utility>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
+#include "Token.h"
 #include "AST.h"
-#include "NullOstream.h"
 #include "debug.h"
+#include "NullOstream.h"
 
 class ASTWalker : protected Visitor {
 public:

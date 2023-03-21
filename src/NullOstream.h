@@ -2,6 +2,7 @@
 #define BF_NULLOSTREAM_H
 
 #include <ostream>
+
 extern std::ostream cnull;
 extern std::wostream wcnull;
 

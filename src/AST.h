@@ -1,11 +1,12 @@
 #ifndef BF_AST_H
 #define BF_AST_H
 
-#include "Token.h"
 #include <memory>
 #include <ostream>
 #include <ranges>
 #include <vector>
+
+#include "Token.h"
 
 class Left;
 class Right;

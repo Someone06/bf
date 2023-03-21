@@ -2,6 +2,7 @@
 #define BF_TOKEN_H
 
 #include<ostream>
+
 #include "TokenType.h"
 
 
