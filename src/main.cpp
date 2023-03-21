@@ -29,8 +29,7 @@ int main(int argc, char* argv[]) {
         auto resolved {resolver.resolve()};
 
         std::ofstream out {"/tmp/bf/build/out.bc"};
-        LLVM codeGen {LLVM{ast, resolved, out}};
-        codeGen.generate_ir();
+        generate_ir(ast, resolved, out);
     }
 }
 

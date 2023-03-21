@@ -4,10 +4,8 @@
 #include <ostream>
 #include <unordered_map>
 
-#include <llvm/IR/Module.h>
-
 #include "AST.h"
 
-llvm::Module& generate_ir(AST& ast, std::unordered_map<const While*, const Node*> next, std::ostream &out);
+void generate_ir(AST& ast, std::unordered_map<const While*, const Node*> next, std::ostream &out);
 
 #endif
