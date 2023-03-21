@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <limits>
+#include <utility>
 
 #include "AstVisitors.h"
 #include "format_string.h"
